@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-
+from app.models.vacancy import Vacancy
 from app.extensions import db
 from app.utils.localization import localize_vacancy
 
@@ -7,6 +7,27 @@ vacancy_bp = Blueprint("vacancy", __name__)
 
 @vacancy_bp.route("/vacancies", methods=["GET"])
 def get_vacancies():
+    """
+    Get a list of all vacancies
+    ---
+    parameters:
+      - name: lang
+        in: query
+        type: string
+        enum: ['en', 'de']
+        default: 'en'
+        description: Language of the content
+    responses:
+      200:
+        description: A list of localized vacancies
+        schema:
+          type: array
+          items:
+            properties:
+              id: {type: integer}
+              title: {type: string}
+              company: {type: string}
+    """
     vacancies = Vacancy.query.all()
     result = [localize_vacancy(v) for v in vacancies]
     return jsonify(result)
