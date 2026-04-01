@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models.vacancy import Vacancy
+
 from app.extensions import db
 from app.utils.localization import localize_vacancy
 
