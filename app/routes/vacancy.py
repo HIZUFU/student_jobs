@@ -35,6 +35,39 @@ def get_vacancies():
 
 @vacancy_bp.route("/vacancies", methods=["POST"])
 def create_vacancy():
+    """
+    Create a new vacancy with translations
+    ---
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: Vacancy
+          required:
+            - title_en
+            - title_de
+            - company
+          properties:
+            title_en:
+              type: string
+              example: "Python Developer Intern"
+            title_de:
+              type: string
+              example: "Python-Entwickler Praktikant"
+            description_en:
+              type: string
+              example: "Work with FastAPI and Postgres"
+            description_de:
+              type: string
+              example: "Arbeiten Sie mit FastAPI und Postgres"
+            company:
+              type: string
+              example: "RTF Lab"
+    responses:
+      201:
+        description: Vacancy created successfully
+    """
     data = request.get_json()
 
     new_vacancy = Vacancy(

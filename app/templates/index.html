@@ -1,0 +1,23 @@
+<div class="row" id="vacancy-container">
+    </div>
+
+<script>
+async function loadVacancies(lang = 'en') {
+    const response = await fetch(`/vacancies?lang=${lang}`);
+    const data = await response.json();
+    const container = document.getElementById('vacancy-container');
+    container.innerHTML = data.map(v => `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">${v.title}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">${v.company}</h6>
+                    <p class="card-text">${v.description}</p>
+                    <button class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+loadVacancies();
+</script>
