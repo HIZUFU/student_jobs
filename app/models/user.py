@@ -1,4 +1,5 @@
 from app.extensions import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
     __tablename__ = "users"
@@ -8,5 +9,13 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     role = db.Column(db.String(50), nullable=False)  # student / admin
 
+    password_hash = db.Column(db.String(256))
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
     def __repr__(self):
         return f"<User {self.email}>"
