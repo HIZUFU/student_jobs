@@ -1,0 +1,41 @@
+{% extends "base.html" %} {% block title %}{{ get_db_lang(vacancy, 'title') }} -
+RTF Jobs{% endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <a href="/" class="btn btn-outline-secondary mb-4"
+      >&larr; {{ t('back_to_list') }}</a
+    >
+
+    <div class="card shadow-sm">
+      <div class="card-body p-5">
+        <h1 class="card-title text-dark mb-3">
+          {{ get_db_lang(vacancy, 'title') }}
+        </h1>
+
+        <h4 class="text-muted mb-4">{{ vacancy.company }}</h4>
+        <span class="badge bg-secondary mb-4 fs-6">
+          {{ get_db_lang(vacancy.department, 'name') }}
+        </span>
+
+        <hr class="mb-4" />
+
+        <h5 class="fw-bold mb-3">{{ t('description_vacancy') }}</h5>
+        <div class="card-text fs-5" style="white-space: pre-line">
+          {{ get_db_lang(vacancy, 'description') or "Описание для этой вакансии
+          пока не добавлено." }}
+        </div>
+
+        <div class="mt-5">
+          <div class="mt-5">
+            <a
+              href="/apply/{{ vacancy.id }}"
+              class="btn btn-primary btn-lg px-5"
+              >Откликнуться</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

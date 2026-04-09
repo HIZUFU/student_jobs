@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <h2 class="mb-4">Личный кабинет</h2>
+
+    {% if role == 'student' %}
+      <h4>Мои отклики</h4>
+      <div class="table-responsive">
+        <table class="table table-hover mt-3 align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Вакансия</th>
+              <th>Компания</th>
+              <th>Дата</th>
+              <th>Статус</th>
+              <th>Действие</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in applications %}
+            <tr>
+              <td><a href="/vacancy/{{ app.vacancy.id }}">{{ app.vacancy.title_ru }}</a></td>
+              <td>{{ app.vacancy.company }}</td>
+              <td>{{ app.created_at.strftime('%d.%m.%Y') }}</td>
+              <td>
+                {% if app.status_id == 4 %}
+                  <span class="badge bg-secondary">Черновик</span>
+                {% elif app.status_id == 1 %}
+                  <span class="badge bg-primary">На рассмотрении</span>
+                {% elif app.status_id == 2 %}
+                  <span class="badge bg-success">Приглашение</span>
+                {% elif app.status_id == 3 %}
+                  <span class="badge bg-danger">Отказ</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if app.status_id == 4 %}
+                  <a href="/apply/{{ app.vacancy.id }}" class="btn btn-sm btn-outline-primary">Дописать</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center">Вы еще никуда не откликались.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% elif role == 'organization' %}
+      <h4>Мои вакансии и кандидаты</h4>
+      <div class="accordion mt-3" id="vacanciesAccordion">
+        {% for vac in vacancies %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading{{ vac.id }}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ vac.id }}">
+              {{ vac.title_ru }} 
+              <span class="badge bg-primary rounded-pill ms-2">Откликов: {{ vac.applications|length }}</span>
+            </button>
+          </h2>
+          <div id="collapse{{ vac.id }}" class="accordion-collapse collapse" data-bs-parent="#vacanciesAccordion">
+            <div class="accordion-body">
+              
+              {% set ns = namespace(has_active=false) %}
+              
+              <ul class="list-group list-group-flush">
+              {% for app in vac.applications %}
+                {% if app.status_id != 4 %}
+                  {% set ns.has_active = true %}
+                  <li class="list-group-item py-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <strong>{{ app.student.name }}</strong> ({{ app.student.email }})
+                        <br>
+                        <small class="text-muted">Дата: {{ app.created_at.strftime('%d.%m.%Y') }}</small>
+                      </div>
+                      
+                      <form action="/change_status/{{ app.id }}" method="POST" class="d-flex">
+                        <select name="status_id" class="form-select form-select-sm me-2" style="width: auto;">
+                          <option value="1" {% if app.status_id == 1 %}selected{% endif %}>На рассмотрении</option>
+                          <option value="2" {% if app.status_id == 2 %}selected{% endif %}>Пригласить</option>
+                          <option value="3" {% if app.status_id == 3 %}selected{% endif %}>Отказ</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-success">ОК</button>
+                      </form>
+                    </div>
+                    
+                    <div class="bg-light p-3 rounded mt-2 text-wrap" style="white-space: pre-line; font-size: 0.9rem;">
+                      {{ app.cover_letter or 'Студент не оставил сопроводительного письма.' }}
+                    </div>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              </ul>
+
+              {% if not ns.has_active %}
+                <p class="text-muted mt-2 mb-0">Пока нет активных откликов.</p>
+              {% endif %}
+
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted">У вас пока нет созданных вакансий.</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

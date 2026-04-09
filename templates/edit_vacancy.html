@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование вакансии{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <h2 class="mb-4">Редактирование вакансии</h2>
+    
+    <form method="POST" action="/update/{{ vacancy.id }}">
+      
+      <div class="mb-3">
+        <label for="title" class="form-label">Название вакансии</label>
+        <input type="text" class="form-control" id="title" name="title" value="{{ vacancy.title_ru }}" required>
+      </div>
+
+      <div class="mb-4">
+        <label for="department_id" class="form-label">Направление / Кафедра</label>
+        <select id="department_id" name="department_id" class="form-control" placeholder="Выберите направление..." required>
+          <option value=""></option>
+          {% for dept in departments %}
+            <option value="{{ dept.id }}" {% if dept.id == vacancy.department_id %}selected{% endif %}>
+              {{ get_db_lang(dept, 'name') }}
+            </option>
+          {% endfor %}
+        </select>
+        <div class="form-text text-muted">Можно выбрать существующее или вписать новое.</div>
+      </div>
+      
+      <div class="mb-4">
+        <label for="description" class="form-label">Описание вакансии и требования</label>
+        <textarea class="form-control" id="description" name="description" rows="8" required>{{ vacancy.description_ru }}</textarea>
+        <div id="char-count-help" class="form-text text-danger mt-2">
+          Написано символов: <span id="char-count" class="fw-bold">0</span> из 100 необходимых.
+        </div>
+      </div>
+      
+      <div class="d-flex justify-content-between">
+        <a href="/" class="btn btn-outline-secondary">Отмена</a>
+        <button type="submit" id="submit-btn" class="btn btn-success px-4" disabled>Сохранить изменения</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    new TomSelect("#department_id", {
+      create: true,
+      sortField: { field: "text", direction: "asc" }
+    });
+
+    const descInput = document.getElementById('description');
+    const charCountSpan = document.getElementById('char-count');
+    const helpText = document.getElementById('char-count-help');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function updateCharCount() {
+      // Считаем именно символы (length)
+      const chars = descInput.value.trim().length;
+      charCountSpan.textContent = chars;
+
+      if (chars < 100) {
+        helpText.className = 'form-text text-danger mt-2';
+        submitBtn.disabled = true;
+      } else {
+        helpText.className = 'form-text text-success mt-2';
+        submitBtn.disabled = false;
+      }
+    }
+
+    descInput.addEventListener('input', updateCharCount);
+    updateCharCount(); // Запускаем сразу, чтобы пересчитать уже существующий текст
+  });
+</script>
+{% endblock %}

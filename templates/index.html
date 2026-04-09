@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('home_page_title') }}{% endblock %}
+
+{% block content %}
+  <h2 class="mb-4">{{ t('vacancies_list') }}</h2>
+  <form class="d-flex mb-4" method="GET" action="/">
+    <input class="form-control me-2" type="search" name="q" value="{{ search_query }}" placeholder="Поиск по названию или компании..." aria-label="Search">
+    <button class="btn btn-outline-primary" type="submit">Найти</button>
+  </form>
+  <div class="row">
+    {% for vacancy in vacancies %}
+      <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body flex-column">
+            
+            <h5 class="card-title">
+              <a href="/vacancy/{{ vacancy.id }}" class="text-decoration-none text-primary">
+                {{ get_db_lang(vacancy, 'title') }}
+              </a>
+            </h5>
+            
+            <h6 class="card-subtitle mb-2 text-muted">
+              {{ vacancy.company }} 
+            </h6>
+            
+            <p class="card-text mt-3">
+              <span class="badge bg-secondary">
+                {{ get_db_lang(vacancy.department, 'name') }}
+              </span>
+            </p>
+            {% if session.get('role') == 'organization' and session.get('user_id') == vacancy.author_id %}
+    <a href="/update/{{ vacancy.id }}" class="btn btn-sm btn-outline-secondary mt-3">Редактировать</a>
+{% endif %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p class="text-muted">{{ t('no_vacancies') }}</p>
+    {% endfor %}
+  </div>
+{% endblock %}
