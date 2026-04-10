@@ -2,10 +2,4 @@ from app.extensions import db
 from .user import User
 from .vacancy import Vacancy
 from .department import Department
-from .profile import Profile
-from .skill import Skill
 from .application import Application
-from .interview import Interview
-from .review import Review
-from .notification import Notification
-from .vacancy_skill import vacancy_skills

@@ -146,9 +146,18 @@ def add_vacancy():
 
 @vacancy_bp.route('/delete/<int:id>')
 def delete_vacancy(id):
+    if session.get('role') != 'organization':
+        flash("У вас нет прав для удаления вакансий.", "danger")
+        return redirect('/')
+        
     vacancy = Vacancy.query.get_or_404(id)
+    if vacancy.author_id != session.get('user_id'):
+        flash("Вы не можете удалить чужую вакансию.", "danger")
+        return redirect('/')
+
     db.session.delete(vacancy)
     db.session.commit()
+    flash("Вакансия удалена.", "success")
     return redirect('/')
 
 @vacancy_bp.route('/update/<int:id>', methods=['GET', 'POST'])
@@ -158,7 +167,7 @@ def update_vacancy(id):
         if session.get('role') != 'organization':
             flash("У вас нет прав для редактирования вакансий.", "danger")
             return redirect('/')
-        else:
+        if vacancy.author_id != session.get('user_id'):
             vacancy.title_ru = request.form.get('title')
             vacancy.company = request.form.get('company')
             

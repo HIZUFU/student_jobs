@@ -6,10 +6,10 @@ from .translations import translations
 from flasgger import Swagger
 from .routes.api import api_bp
 
-from .models.user import User, StudentProfile, EmployerProfile, student_skills
+from .models.user import User
+from .models.vacancy import Vacancy, Skill, vacancy_skills
 from .models.department import Department
-from .models.vacancy import Vacancy, Category, Skill, vacancy_skills
-from .models.application import Application, ApplicationStatus
+from .models.application import Application
 
 def create_app():
     app = Flask(__name__, template_folder='../templates')
