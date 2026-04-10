@@ -69,11 +69,9 @@ def dashboard():
     role = session.get('role')
 
     if role == 'student':
-        # Студент видит свои отклики
         applications = Application.query.filter_by(student_id=user_id).all()
         return render_template('dashboard.html', applications=applications, role=role)
     
     elif role == 'organization':
-        # Работодатель видит свои вакансии и тех, кто на них откликнулся
         my_vacancies = Vacancy.query.filter_by(author_id=user_id).all()
         return render_template('dashboard.html', vacancies=my_vacancies, role=role)

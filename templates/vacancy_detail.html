@@ -27,11 +27,11 @@ RTF Jobs{% endblock %} {% block content %}
 
         <div class="mt-5">
           <div class="mt-5">
-            <a
-              href="/apply/{{ vacancy.id }}"
-              class="btn btn-primary btn-lg px-5"
-              >Откликнуться</a
-            >
+            {% if session.get('role') == 'student' %}
+                <a href="/apply/{{ vacancy.id }}" class="btn btn-primary">
+                    Откликнуться
+                </a>
+            {% endif %}
           </div>
         </div>
       </div>

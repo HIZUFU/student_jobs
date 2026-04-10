@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.extensions import db
 
 vacancy_skills = db.Table('vacancy_skills',
@@ -32,6 +34,12 @@ class Vacancy(db.Model):
     
     company = db.Column(db.String(150), nullable=False)
     
+    salary_from = db.Column(db.Integer)
+    salary_to = db.Column(db.Integer)
+    employment_type = db.Column(db.String(50))
+    is_internship = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)

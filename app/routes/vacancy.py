@@ -180,20 +180,13 @@ def update_vacancy(id):
 
 @vacancy_bp.route('/set_lang/<lang>')
 def set_lang(lang):
-    # Разрешаем только те языки, которые поддерживает наш сайт
     if lang in ['ru', 'en', 'de']: 
         session['lang'] = lang
-        
-    # request.referrer — это магия Flask. Он возвращает URL страницы, 
-    # с которой пользователь нажал на кнопку. Если его нет — кидаем на главную ('/').
     return redirect(request.referrer or '/')
 
 @vacancy_bp.route('/vacancy/<int:id>')
 def vacancy_detail(id):
-    # Ищем вакансию по ID. Если её нет — Flask автоматически выдаст ошибку 404
     vacancy = Vacancy.query.get_or_404(id)
-    
-    # Передаем найденную вакансию в новый шаблон
     return render_template('vacancy_detail.html', vacancy=vacancy)
 
 @vacancy_bp.route('/change_status/<int:app_id>', methods=['POST'])
@@ -202,8 +195,6 @@ def change_status(app_id):
         return redirect('/')
 
     application = Application.query.get_or_404(app_id)
-    
-    # Защита: проверяем, что вакансия принадлежит этому работодателю
     if application.vacancy.author_id != session.get('user_id'):
         flash("У вас нет прав!", "danger")
         return redirect('/dashboard')

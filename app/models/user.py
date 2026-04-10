@@ -12,7 +12,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    role = db.Column(db.String(50), nullable=False) # student или organization
+    role = db.Column(db.String(50), nullable=False)
     password_hash = db.Column(db.String(256))
 
     student_profile = db.relationship('StudentProfile', backref='user', uselist=False)
@@ -30,7 +30,11 @@ class StudentProfile(db.Model):
     __tablename__ = 'student_profiles'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
-    group_name = db.Column(db.String(50)) # Например: НМТ-332210
+    group_name = db.Column(db.String(50)) 
+    
+    university = db.Column(db.String(150)) 
+    experience = db.Column(db.Text)       
+    
     about_ru = db.Column(db.Text)
     about_en = db.Column(db.Text)
     about_de = db.Column(db.Text)
@@ -39,5 +43,8 @@ class EmployerProfile(db.Model):
     __tablename__ = 'employer_profiles'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
-    company_name = db.Column(db.String(150))
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    company_name = db.Column(db.String(150))
+    
+    description = db.Column(db.Text)     
+    website = db.Column(db.String(150))  
