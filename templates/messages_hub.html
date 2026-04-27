@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid" style="height: 80vh;">
+    <div class="row h-100 shadow-sm rounded bg-white overflow-hidden">
+        
+        <div class="col-md-4 border-end p-0 bg-light" style="overflow-y: auto;">
+            <div class="p-3 bg-white border-bottom">
+                <h5 class="mb-0">Мои диалоги</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for app in apps %}
+                <a href="/messages/{{ app.id }}" class="list-group-item list-group-item-action p-3 {% if active_chat and active_chat.id == app.id %}active{% endif %}">
+                    <div class="d-flex justify-content-between mb-1">
+                        <h6 class="mb-0">
+                            {% if session.role == 'student' %}
+                                {{ app.vacancy.company }}
+                            {% else %}
+                                {{ app.student.name }}
+                            {% endif %}
+                        </h6>
+                        <small class="{% if active_chat and active_chat.id == app.id %}text-white{% else %}text-muted{% endif %}">
+                            {{ app.created_at.strftime('%d.%m') }}
+                        </small>
+                    </div>
+                    <div class="small text-truncate">
+                        <strong>Вакансия:</strong> {{ get_db_lang(app.vacancy, 'title') }}
+                    </div>
+                </a>
+                {% else %}
+                <div class="p-4 text-center text-muted">У вас пока нет активных переписок.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-8 d-flex flex-column p-0 bg-white">
+            {% if active_chat %}
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ active_chat.vacancy.title_ru }}</h5>
+                    </div>
+                    <a href="/application/{{ active_chat.id }}" class="btn btn-sm btn-outline-primary">Детали отклика</a>
+                </div>
+
+                <div class="flex-grow-1 p-4 bg-light" style="overflow-y: auto;" id="chat-window">
+                    {% for msg in active_chat.messages %}
+                    <div class="mb-3 {% if msg.sender_id == session.user_id %}text-end{% endif %}">
+                        <div class="d-inline-block p-3 rounded shadow-sm {% if msg.sender_id == session.user_id %}bg-primary text-white{% else %}bg-white border{% endif %}" style="max-width: 75%;">
+                            <div class="small fw-bold mb-1 opacity-75">{{ msg.sender.name }}</div>
+                            <div style="white-space: pre-line;">{{ msg.text }}</div>
+                            <div class="text-end mt-1" style="font-size: 0.7rem; opacity: 0.7;">{{ msg.created_at.strftime('%H:%M') }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="p-3 border-top">
+                    <form action="/application/{{ active_chat.id }}/message" method="POST" class="d-flex gap-2">
+                        <input type="text" name="message_text" class="form-control rounded-pill" placeholder="Напишите сообщение..." required autocomplete="off">
+                        <input type="hidden" name="redirect_to" value="messenger"> <button type="submit" class="btn btn-primary rounded-circle px-3">
+                            <i class="bi bi-send"></i> ✈
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="my-auto text-center text-muted">
+                    <div class="display-1 mb-3">💬</div>
+                    <h5>Выберите диалог для начала общения</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Автопрокрутка чата вниз при загрузке
+    const chat = document.getElementById('chat-window');
+    if (chat) chat.scrollTop = chat.scrollHeight;
+</script>
+{% endblock %}

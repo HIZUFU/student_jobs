@@ -34,7 +34,6 @@
           Написано символов: <span id="char-count" class="fw-bold">0</span> из 100 необходимых.
         </div>
       </div>
-      
       <div class="d-flex justify-content-between">
         <a href="/" class="btn btn-outline-secondary">Отмена</a>
         <button type="submit" id="submit-btn" class="btn btn-success px-4" disabled>Сохранить изменения</button>
@@ -59,7 +58,6 @@
     const submitBtn = document.getElementById('submit-btn');
 
     function updateCharCount() {
-      // Считаем именно символы (length)
       const chars = descInput.value.trim().length;
       charCountSpan.textContent = chars;
 

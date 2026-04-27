@@ -3,111 +3,187 @@
 
 {% block content %}
 <div class="row">
-  <div class="col-12">
-    <h2 class="mb-4">Личный кабинет</h2>
-
-    {% if role == 'student' %}
-      <h4>Мои отклики</h4>
-      <div class="table-responsive">
-        <table class="table table-hover mt-3 align-middle">
-          <thead class="table-dark">
-            <tr>
-              <th>Вакансия</th>
-              <th>Компания</th>
-              <th>Дата</th>
-              <th>Статус</th>
-              <th>Действие</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for app in applications %}
-            <tr>
-              <td><a href="/vacancy/{{ app.vacancy.id }}">{{ app.vacancy.title_ru }}</a></td>
-              <td>{{ app.vacancy.company }}</td>
-              <td>{{ app.created_at.strftime('%d.%m.%Y') }}</td>
-              <td>
-                {% if app.status_id == 4 %}
-                  <span class="badge bg-secondary">Черновик</span>
-                {% elif app.status_id == 1 %}
-                  <span class="badge bg-primary">На рассмотрении</span>
-                {% elif app.status_id == 2 %}
-                  <span class="badge bg-success">Приглашение</span>
-                {% elif app.status_id == 3 %}
-                  <span class="badge bg-danger">Отказ</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if app.status_id == 4 %}
-                  <a href="/apply/{{ app.vacancy.id }}" class="btn btn-sm btn-outline-primary">Дописать</a>
-                {% endif %}
-              </td>
-            </tr>
-            {% else %}
-            <tr><td colspan="5" class="text-center">Вы еще никуда не откликались.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-    {% elif role == 'organization' %}
-      <h4>Мои вакансии и кандидаты</h4>
-      <div class="accordion mt-3" id="vacanciesAccordion">
-        {% for vac in vacancies %}
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="heading{{ vac.id }}">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ vac.id }}">
-              {{ vac.title_ru }} 
-              <span class="badge bg-primary rounded-pill ms-2">Откликов: {{ vac.applications|length }}</span>
-            </button>
-          </h2>
-          <div id="collapse{{ vac.id }}" class="accordion-collapse collapse" data-bs-parent="#vacanciesAccordion">
-            <div class="accordion-body">
-              
-              {% set ns = namespace(has_active=false) %}
-              
-              <ul class="list-group list-group-flush">
-              {% for app in vac.applications %}
-                {% if app.status_id != 4 %}
-                  {% set ns.has_active = true %}
-                  <li class="list-group-item py-3">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                        <strong>{{ app.student.name }}</strong> ({{ app.student.email }})
-                        <br>
-                        <small class="text-muted">Дата: {{ app.created_at.strftime('%d.%m.%Y') }}</small>
-                      </div>
-                      
-                      <form action="/change_status/{{ app.id }}" method="POST" class="d-flex">
-                        <select name="status_id" class="form-select form-select-sm me-2" style="width: auto;">
-                          <option value="1" {% if app.status_id == 1 %}selected{% endif %}>На рассмотрении</option>
-                          <option value="2" {% if app.status_id == 2 %}selected{% endif %}>Пригласить</option>
-                          <option value="3" {% if app.status_id == 3 %}selected{% endif %}>Отказ</option>
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-outline-success">ОК</button>
-                      </form>
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; font-size: 24px;">
+                        {{ user.name[0] | upper }}
                     </div>
-                    
-                    <div class="bg-light p-3 rounded mt-2 text-wrap" style="white-space: pre-line; font-size: 0.9rem;">
-                      {{ app.cover_letter or 'Студент не оставил сопроводительного письма.' }}
+                </div>
+                <h4 class="card-title text-center mb-0">{{ user.name }}</h4>
+                <p class="text-muted text-center small">{{ user.email }}</p>
+                <hr>
+                
+                {% if role == 'student' and user.student_profile %}
+                    <div class="mb-3">
+                        <p class="mb-1 text-muted small">ВУЗ и группа</p>
+                        <p class="mb-2"><strong>{{ user.student_profile.university }}</strong> ({{ user.student_profile.group_name }})</p>
+                        
+                        <p class="mb-1 text-muted small">Контакты</p>
+                        <p class="mb-2"><strong>📞 {{ user.student_profile.phone or 'Не указан' }}</strong></p>
+                        
+                        <p class="mb-1 text-muted small">Адрес</p>
+                        <p class="mb-2"><strong>📍 {{ user.student_profile.address or 'Не указан' }}</strong></p>
+                        
+                        <p class="mb-1 text-muted small">Желаемая занятость</p>
+                        <p class="mb-2"><strong>🎯 {{ user.student_profile.desired_employment_type or 'Любая' }}</strong></p>
                     </div>
-                  </li>
+
+                {% elif role == 'organization' and user.employer_profile %}
+                    <div class="mb-3">
+                        <p class="mb-1 text-muted small">Компания</p>
+                        <p class="mb-2"><strong>{{ user.employer_profile.company_name }}</strong></p>
+                        
+                        <p class="mb-1 text-muted small">ИНН</p>
+                        <p class="mb-2"><strong>📄 {{ user.employer_profile.inn or 'Не указан' }}</strong></p>
+                        
+                        <p class="mb-1 text-muted small">Телефон и адрес</p>
+                        <p class="mb-2"><strong>📞 {{ user.employer_profile.phone or 'Не указан' }}</strong></p>
+                        <p class="mb-2"><strong>📍 {{ user.employer_profile.address or 'Не указан' }}</strong></p>
+                        
+                        <p class="mb-1 text-muted small">График работы</p>
+                        <p class="mb-2"><strong>🕒 {{ user.employer_profile.working_hours or 'Не указан' }}</strong></p>
+                    </div>
                 {% endif %}
-              {% endfor %}
-              </ul>
 
-              {% if not ns.has_active %}
-                <p class="text-muted mt-2 mb-0">Пока нет активных откликов.</p>
-              {% endif %}
-
+                <a href="/edit_profile" class="btn btn-outline-primary w-100 mt-2">
+                    ⚙️ Редактировать профиль
+                </a>
             </div>
-          </div>
         </div>
-        {% else %}
-        <p class="text-muted">У вас пока нет созданных вакансий.</p>
-        {% endfor %}
-      </div>
-    {% endif %}
+    </div>
 
-  </div>
+    <div class="col-md-8">
+        <h2 class="mb-4">Панель управления</h2>
+
+        {% if role == 'student' %}
+            
+            {% if invitations %}
+                <div class="card border-success mb-4 shadow-sm">
+                    <div class="card-header bg-success text-white fw-bold">
+                        🎉 Новые приглашения ({{ invitations|length }})
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for app in invitations %}
+                        <li class="list-group-item p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="mb-1">{{ app.vacancy.title_ru }}</h5>
+                                    <p class="text-muted mb-2">🏢 {{ app.vacancy.company }}</p>
+                                </div>
+                                <span class="badge bg-success">Приглашение</span>
+                            </div>
+                            <div class="p-3 bg-light rounded border-start border-success border-4 mt-2">
+                                <div class="mb-1"><strong>📅 Время встречи:</strong> {{ app.interview_time or 'Будет уточнено' }}</div>
+                                <div><strong>📍 Место / Ссылка:</strong> <span class="text-primary">{{ app.interview_place or 'Будет уточнено' }}</span></div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+            {% endif %}
+
+            <h4>Мои отклики</h4>
+            <div class="table-responsive shadow-sm bg-white rounded">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Вакансия</th>
+                            <th>Компания</th>
+                            <th>Статус</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                        <tr>
+                            <td><a href="/vacancy/{{ app.vacancy.id }}" class="fw-bold text-decoration-none">{{ app.vacancy.title_ru }}</a></td>
+                            <td>{{ app.vacancy.company }}</td>
+                            <td>
+                                {% if app.status_id == 1 %}<span class="badge bg-primary">На рассмотрении</span>
+                                {% elif app.status_id == 2 %}<span class="badge bg-success">Приглашение</span>
+                                {% elif app.status_id == 3 %}<span class="badge bg-danger">Отказ</span>
+                                {% elif app.status_id == 4 %}<span class="badge bg-secondary">Черновик</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if app.status_id == 4 %}
+                                    <a href="/apply/{{ app.vacancy.id }}" class="btn btn-sm btn-outline-primary">Дописать</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center py-4 text-muted">Вы еще не оставляли откликов.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% elif role == 'organization' %}
+            <h4>Мои вакансии и кандидаты</h4>
+            <div class="accordion mt-3 shadow-sm" id="vacanciesAccordion">
+                {% for vac in vacancies %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ vac.id }}">
+                            {{ vac.title_ru }}
+                            <span class="badge bg-primary rounded-pill ms-3">Откликов: {{ vac.applications|length }}</span>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ vac.id }}" class="accordion-collapse collapse" data-bs-parent="#vacanciesAccordion">
+                        <div class="accordion-body p-0">
+                            <ul class="list-group list-group-flush">
+                            {% for app in vac.applications %}
+                                {% if app.status_id != 4 %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">{{ app.student.name }}</h6>
+                                            <small class="text-muted">{{ app.created_at.strftime('%d.%m.%Y') }}</small>
+                                            
+                                            <span class="badge ms-2 
+                                                {% if app.status_id == 1 %}bg-primary
+                                                {% elif app.status_id == 2 %}bg-success
+                                                {% elif app.status_id == 3 %}bg-danger
+                                                {% endif %}">
+                                                {% if app.status_id == 1 %}На рассмотрении
+                                                {% elif app.status_id == 2 %}Приглашение
+                                                {% elif app.status_id == 3 %}Отказ
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        
+                                        <a href="/application/{{ app.id }}" class="btn btn-sm btn-outline-primary">Подробнее &rarr;</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            </ul>
+                            {% if vac.applications|length == 0 %}
+                                <div class="p-3 text-center text-muted">Пока никто не откликнулся.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const appId = this.getAttribute('data-app-id');
+            const fields = document.getElementById('interview-fields-' + appId);
+            if (this.value === '2') {
+                fields.style.display = 'block';
+            } else {
+                fields.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

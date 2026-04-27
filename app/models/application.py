@@ -17,7 +17,24 @@ class Application(db.Model):
     status_id = db.Column(db.Integer, db.ForeignKey('application_statuses.id'), nullable=False, default=1)
     
     cover_letter = db.Column(db.Text)
+    
+    interview_time = db.Column(db.String(100))
+    interview_place = db.Column(db.String(255))
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     student = db.relationship('User', backref='student_applications')
     status = db.relationship('ApplicationStatus')
+    
+    messages = db.relationship('Message', backref='application', lazy=True, cascade="all, delete-orphan")
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    application_id = db.Column(db.Integer, db.ForeignKey('applications.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    sender = db.relationship('User')

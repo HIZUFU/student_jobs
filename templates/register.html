@@ -1,34 +1,64 @@
-{%- extends "base.html" -%} {% block title %}Регистрация{% endblock %} {% block
-content %}
+{%- extends "base.html" -%} 
+{% block title %}Регистрация{% endblock %} 
+
+{% block content %}
 <div class="row justify-content-center">
   <div class="col-md-6">
     <h2>Регистрация</h2>
     <form method="POST" action="/register">
-  <div class="form-group mb-3">
-    <label for="username">Name</label>
-    <input type="text" class="form-control" id="username" name="username" value="{{ request.form.get('username', '') }}" required>
-  </div>
-  
-  <div class="form-group mb-3">
-    <label for="email">Email</label>
-    <input type="email" class="form-control" id="email" name="email" value="{{ request.form.get('email', '') }}" required>
-  </div>
-  
-  <div class="form-group mb-3">
-    <label for="role">Выберите вашу роль</label>
-    <select class="form-select" id="role" name="role" required>
-      <option value="student" {% if request.form.get('role') == 'student' %}selected{% endif %}>Студент</option>
-      <option value="organization" {% if request.form.get('role') == 'organization' %}selected{% endif %}>Организация</option>
-    </select>
-  </div>
-  
-  <div class="form-group mb-4">
-    <label for="password">Password</label>
-    <input type="password" class="form-control" id="password" name="password" required>
-  </div>
-  
-  <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
-</form>
+      
+      <div class="form-group mb-3">
+        <label for="username">Name</label>
+        <input type="text" class="form-control" id="username" name="username" value="{{ request.form.get('username', '') }}" required>
+      </div>
+      
+      <div class="form-group mb-3">
+        <label for="email">Email</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ request.form.get('email', '') }}" required>
+      </div>
+      
+      <div class="form-group mb-3">
+        <label for="role">Выберите вашу роль</label>
+        <select class="form-select" id="role" name="role" required>
+          <option value="student" {% if request.form.get('role') == 'student' %}selected{% endif %}>Студент</option>
+          <option value="organization" {% if request.form.get('role') == 'organization' %}selected{% endif %}>Организация</option>
+        </select>
+      </div>
+      
+      <div class="form-group mb-3" id="company_name_block" style="display: none;">
+        <label for="company_name">Название организации</label>
+        <input type="text" class="form-control" id="company_name" name="company_name" placeholder='Например: ООО "Сбербанк"' value="{{ request.form.get('company_name', '') }}">
+      </div>
+      
+      <div class="form-group mb-4">
+        <label for="password">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      
+      <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+    </form>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const roleSelect = document.getElementById('role');
+      const companyBlock = document.getElementById('company_name_block');
+      const companyInput = document.getElementById('company_name');
+
+      function toggleCompanyField() {
+          if (roleSelect.value === 'organization') {
+              companyBlock.style.display = 'block';
+              companyInput.setAttribute('required', 'required');
+          } else {
+              companyBlock.style.display = 'none';
+              companyInput.removeAttribute('required');
+          }
+      }
+
+      toggleCompanyField();
+
+      roleSelect.addEventListener('change', toggleCompanyField);
+  });
+</script>
 {% endblock %}

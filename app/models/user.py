@@ -31,9 +31,12 @@ class StudentProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     group_name = db.Column(db.String(50)) 
-    
     university = db.Column(db.String(150)) 
     experience = db.Column(db.Text)       
+    
+    phone = db.Column(db.String(20))
+    address = db.Column(db.String(200))
+    desired_employment_type = db.Column(db.String(100))
     
     about_ru = db.Column(db.Text)
     about_en = db.Column(db.Text)
@@ -45,6 +48,9 @@ class EmployerProfile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     company_name = db.Column(db.String(150))
-    
     description = db.Column(db.Text)     
     website = db.Column(db.String(150))  
+    inn = db.Column(db.String(20))
+    phone = db.Column(db.String(20))
+    address = db.Column(db.String(200))
+    working_hours = db.Column(db.String(100)) 

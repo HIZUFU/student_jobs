@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm p-4">
+            <h2 class="mb-4">Редактирование профиля</h2>
+            <form method="POST">
+                {% if user.role == 'student' %}
+                    <div class="mb-3">
+                        <label class="form-label">Номер телефона</label>
+                        <input type="text" name="phone" class="form-control" value="{{ user.student_profile.phone or '' }}">
+                    </div>
+                    <div class="mb-3">
+        <label class="form-label fw-bold">Учебное заведение (ВУЗ)</label>
+        <input type="text" name="university" class="form-control" 
+               value="{{ user.student_profile.university or '' }}" 
+               placeholder="Например: УрФУ">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Академическая группа</label>
+        <input type="text" name="group_name" class="form-control" 
+               value="{{ user.student_profile.group_name or '' }}" 
+               placeholder="Например: НМТ-332210">
+    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Адрес проживания</label>
+                        <input type="text" name="address" class="form-control" value="{{ user.student_profile.address or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Желаемая занятость</label>
+                        <input type="text" name="employment_type" class="form-control" value="{{ user.student_profile.desired_employment_type or '' }}" placeholder="Например: Удаленка, Полный день">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Опыт работы</label>
+                        <textarea name="experience" class="form-control" rows="3">{{ user.student_profile.experience or '' }}</textarea>
+                    </div>
+                {% else %}
+                    <div class="mb-3">
+                        <label class="form-label">Название организации</label>
+                        <input type="text" name="company_name" class="form-control" value="{{ user.employer_profile.company_name or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ИНН</label>
+                        <input type="text" name="inn" class="form-control" value="{{ user.employer_profile.inn or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Телефон организации</label>
+                        <input type="text" name="phone" class="form-control" value="{{ user.employer_profile.phone or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Адрес офиса</label>
+                        <input type="text" name="address" class="form-control" value="{{ user.employer_profile.address or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Режим работы</label>
+                        <input type="text" name="working_hours" class="form-control" value="{{ user.employer_profile.working_hours or '' }}" placeholder="Например: Пн-Пт 9:00-18:00">
+                    </div>
+                {% endif %}
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/dashboard" class="btn btn-secondary">Отмена</a>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

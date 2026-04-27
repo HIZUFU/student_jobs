@@ -26,16 +26,25 @@
           </div>
 
           {% if session.get('user_id') %}
+          <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2 me-4 mt-3">
+        {% if session.get('role') == 'student' %}
+        <a class="text-light text-decoration-none fw-bold" href="/dashboard">{{ session.get('user_name') }}</a>
+        <span class="badge bg-info text-dark">{{ t('student') }}</span>
             
-            <span class="navbar-text me-4 text-light fw-bold">
-              <a class="nav-link text-light" href="/dashboard">{{ session.get('user_name') }}
-              
-              {% if session.get('role') == 'student' %}
-                <span class="badge bg-info text-dark ms-1">{{ t('student') }}</span>
-              {% elif session.get('role') == 'organization' %}
-                <span class="badge bg-warning text-dark ms-1">{{ t('organization') }}</span>
-              {% endif %}</a>
+        {% elif session.get('role') == 'organization' %}
+            <a class="text-light text-decoration-none fw-bold" href="/dashboard">{{ session.get('company_name') }}</a>
+            <span class="badge bg-warning text-dark">{{ t('organization') }}</span>
+        {% endif %}
+    <a class="nav-link text-light position-relative me-3" href="/messages">
+        Сообщения
+        {% if unread_count %} <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ unread_count }}
             </span>
+    </a>
+{% endif %}
+    </div>
+</div>
             
             {% if session.get('role') == 'organization' %}
               <a class="btn btn-outline-light btn-sm me-3" href="/add">{{ t('add_vacancy') }}</a>

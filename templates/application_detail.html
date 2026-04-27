@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Отклик: {{ app.student.name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="/dashboard" class="btn btn-outline-secondary mb-3">&larr; Вернуться в Личный кабинет</a>
+        <h2>Отклик на вакансию: <a href="/vacancy/{{ app.vacancy.id }}" class="text-decoration-none">{{ app.vacancy.title_ru }}</a></h2>
+        <p class="text-muted">Дата отклика: {{ app.created_at.strftime('%d.%m.%Y в %H:%M') }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light fw-bold">
+                👤 Профиль кандидата
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ app.student.name }}</h5>
+                <p class="text-muted mb-3"><a href="mailto:{{ app.student.email }}">{{ app.student.email }}</a></p>
+                
+                {% if app.student.student_profile %}
+                    <p class="mb-1"><strong>🎓 ВУЗ:</strong> {{ app.student.student_profile.university or 'Не указан' }}</p>
+                    <p class="mb-1"><strong>👥 Группа:</strong> {{ app.student.student_profile.group_name or 'Не указана' }}</p>
+                    <p class="mb-1"><strong>📞 Телефон:</strong> {{ app.student.student_profile.phone or 'Не указан' }}</p>
+                    <p class="mb-1"><strong>📍 Адрес:</strong> {{ app.student.student_profile.address or 'Не указан' }}</p>
+                    <p class="mb-3"><strong>🎯 Занятость:</strong> {{ app.student.student_profile.desired_employment_type or 'Любая' }}</p>
+                    
+                    <h6>Опыт работы:</h6>
+                    <div class="bg-light p-2 rounded small" style="white-space: pre-line;">
+                        {{ app.student.student_profile.experience or 'Кандидат не заполнил блок опыта.' }}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Кандидат еще не заполнил профиль.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        
+        {% if session.get('role') == 'organization' %}
+        <div class="card shadow-sm mb-4 border-primary">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Управление откликом</h5>
+                <form action="/change_status/{{ app.id }}" method="POST">
+                    <div class="row align-items-end">
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small text-muted">Текущий статус</label>
+                            <select name="status_id" class="form-select status-select" data-app-id="{{ app.id }}">
+                                <option value="1" {% if app.status_id == 1 %}selected{% endif %}>На рассмотрении</option>
+                                <option value="2" {% if app.status_id == 2 %}selected{% endif %}>Пригласить</option>
+                                <option value="3" {% if app.status_id == 3 %}selected{% endif %}>Отказ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 mb-2">
+                            <div class="interview-fields" id="interview-fields-{{ app.id }}" style="display: {% if app.status_id == 2 %}flex{% else %}none{% endif %}; gap: 10px;">
+                                <input type="text" name="interview_time" class="form-control" placeholder="Время (напр. Завтра в 15:00)" value="{{ app.interview_time or '' }}">
+                                <input type="text" name="interview_place" class="form-control" placeholder="Место или ссылка" value="{{ app.interview_place or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Сохранить решение</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert 
+            {% if app.status_id == 1 %}alert-primary
+            {% elif app.status_id == 2 %}alert-success
+            {% elif app.status_id == 3 %}alert-danger
+            {% else %}alert-secondary{% endif %} mb-4 shadow-sm">
+            <h5 class="mb-1">Текущий статус: 
+                <strong>
+                    {% if app.status_id == 1 %}На рассмотрении
+                    {% elif app.status_id == 2 %}Приглашение на собеседование 🎉
+                    {% elif app.status_id == 3 %}Отказ
+                    {% else %}Черновик{% endif %}
+                </strong>
+            </h5>
+            {% if app.status_id == 2 %}
+                <hr>
+                <div class="mb-1"><strong>📅 Время встречи:</strong> {{ app.interview_time or 'Ожидается' }}</div>
+                <div><strong>📍 Место / Ссылка:</strong> {{ app.interview_place or 'Ожидается' }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold">
+                ✉️ Сопроводительное письмо
+            </div>
+            <div class="card-body">
+                <div class="text-wrap" style="white-space: pre-line; font-size: 1.05rem;">
+                    {{ app.cover_letter or 'Кандидат откликнулся без сопроводительного письма.' }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.get('role') == 'organization' %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const appId = this.getAttribute('data-app-id');
+            const fields = document.getElementById('interview-fields-' + appId);
+            if (this.value === '2') {
+                fields.style.display = 'flex';
+                fields.querySelectorAll('input').forEach(input => input.setAttribute('required', 'required'));
+            } else {
+                fields.style.display = 'none';
+                fields.querySelectorAll('input').forEach(input => input.removeAttribute('required'));
+            }
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

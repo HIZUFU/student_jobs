@@ -5,11 +5,12 @@ from .routes.auth import auth_bp
 from .translations import translations 
 from flasgger import Swagger
 from .routes.api import api_bp
+from .routes.application import application_bp
 
 from .models.user import User
 from .models.vacancy import Vacancy, Skill, vacancy_skills
 from .models.department import Department
-from .models.application import Application
+from .models.application import Application, Message
 
 def create_app():
     app = Flask(__name__, template_folder='../templates')
@@ -22,6 +23,7 @@ def create_app():
     app.register_blueprint(vacancy_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(application_bp)
 
     Swagger(app)
 

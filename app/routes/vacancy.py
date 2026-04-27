@@ -4,7 +4,6 @@ from app.models.vacancy import Vacancy
 from app.models.application import Application
 from app.extensions import db
 from deep_translator import GoogleTranslator
-from app.models.application import ApplicationStatus
 
 vacancy_bp = Blueprint('vacancy', __name__)
 
@@ -30,7 +29,6 @@ def apply_vacancy(vacancy_id):
 
     vacancy = Vacancy.query.get_or_404(vacancy_id)
     
-    # Ищем, есть ли уже отклик (вдруг студент возвращается к черновику)
     existing_app = Application.query.filter_by(
         vacancy_id=vacancy_id, 
         student_id=session['user_id']
@@ -38,17 +36,18 @@ def apply_vacancy(vacancy_id):
 
     if request.method == 'POST':
         cover_letter = request.form.get('cover_letter', '')
-        action = request.form.get('action') # Кнопка 'send' или 'draft'
+        action = request.form.get('action')
         
-        # 4 - Черновик, 1 - На рассмотрении
         status_id = 4 if action == 'draft' else 1 
 
         if existing_app:
-            # Обновляем существующий черновик
+            if existing_app.status_id != 4 and action == 'send':
+                flash("Вы уже отправили отклик на эту вакансию.", "warning")
+                return redirect('/dashboard')
+                
             existing_app.cover_letter = cover_letter
             existing_app.status_id = status_id
         else:
-            # Создаем новый отклик
             new_app = Application(
                 vacancy_id=vacancy_id,
                 student_id=session['user_id'],
@@ -74,26 +73,35 @@ def add_vacancy():
         flash("Пожалуйста, войдите в систему.", "info")
         return redirect('/login')
     
-    # Проверка: Является ли он организацией?
     if session.get('role') != 'organization':
         flash("Только организации могут публиковать вакансии.", "danger")
         return redirect('/')
     
     if request.method == 'POST':
         title_ru = request.form['title']
-        company = session.get('user_name')
-        dept_input = request.form.get('department_id') # Получаем данные из поля департамента
-        description_ru = request.form.get('description', '') # Получаем описание из формы
+        company = session.get('company_name') or session.get('user_name') # Берем название компании из сессии
         
-        # --- ЖЕСТКАЯ ПРОВЕРКА НА 100 СЛОВ ---
+        salary_from_raw = request.form.get('salary_from')
+        salary_to_raw = request.form.get('salary_to')
+        employment_type = request.form.get('employment_type', '')
+        is_internship = True if request.form.get('is_internship') == 'yes' else False
+        salary_from = int(salary_from_raw) if salary_from_raw and salary_from_raw.isdigit() else None
+        salary_to = int(salary_to_raw) if salary_to_raw and salary_to_raw.isdigit() else None
+        
+        dept_input = request.form.get('department_id')
+        if not dept_input:
+            flash("Пожалуйста, выберите кафедру или направление.", "danger")
+            departments = Department.query.all()
+            return render_template('add_vacancy.html', departments=departments)
+
+        description_ru = request.form.get('description', '')
         len_description = len(description_ru)
         if len_description < 100:
             flash(f"Описание слишком короткое. Вы написали {len_description} символов, а нужно минимум 100.", "danger")
             departments = Department.query.all()
             return render_template('add_vacancy.html', departments=departments)
 
-        # --- 1. ОБРАБОТКА И ПЕРЕВОД ДЕПАРТАМЕНТА ---
-        if dept_input.isdigit():
+        if str(dept_input).isdigit():
             final_dept_id = int(dept_input)
         else:
             existing_dept = Department.query.filter_by(name_ru=dept_input).first()
@@ -111,29 +119,29 @@ def add_vacancy():
                 db.session.commit()
                 final_dept_id = new_dept.id
 
-        # --- 2. ПЕРЕВОД ВАКАНСИИ И ОПИСАНИЯ ---
         try:
             t_en = GoogleTranslator(source='auto', target='en').translate(title_ru)
             t_de = GoogleTranslator(source='auto', target='de').translate(title_ru)
-            
-            # Переводим длинный текст описания
             desc_en = GoogleTranslator(source='auto', target='en').translate(description_ru)
             desc_de = GoogleTranslator(source='auto', target='de').translate(description_ru)
         except:
             t_en, t_de = title_ru, title_ru
             desc_en, desc_de = description_ru, description_ru
 
-        # --- 3. СОХРАНЕНИЕ ---
         new_vacancy = Vacancy(
             title_ru=title_ru, 
             title_en=t_en, 
             title_de=t_de, 
-            description_ru=description_ru,   # Сохраняем русское описание
-            description_en=desc_en,          # Сохраняем английское
-            description_de=desc_de,          # Сохраняем немецкое
+            description_ru=description_ru,
+            description_en=desc_en,
+            description_de=desc_de,
             company=company,
-            department_id=final_dept_id,        
-            author_id=session.get('user_id')    
+            department_id=final_dept_id,
+            author_id=session.get('user_id'),
+            salary_from=salary_from,
+            salary_to=salary_to,
+            employment_type=employment_type,
+            is_internship=is_internship
         )
         
         db.session.add(new_vacancy)
@@ -155,28 +163,79 @@ def delete_vacancy(id):
         flash("Вы не можете удалить чужую вакансию.", "danger")
         return redirect('/')
 
+    # Сначала удаляем все отклики
+    Application.query.filter_by(vacancy_id=id).delete()
+
     db.session.delete(vacancy)
     db.session.commit()
+    
     flash("Вакансия удалена.", "success")
     return redirect('/')
 
 @vacancy_bp.route('/update/<int:id>', methods=['GET', 'POST'])
 def update_vacancy(id):
     vacancy = Vacancy.query.get_or_404(id)
-    if request.method == 'POST':
-        if session.get('role') != 'organization':
-            flash("У вас нет прав для редактирования вакансий.", "danger")
-            return redirect('/')
-        if vacancy.author_id != session.get('user_id'):
-            vacancy.title_ru = request.form.get('title')
-            vacancy.company = request.form.get('company')
-            
-            vacancy.title_en = GoogleTranslator(source='auto', target='en').translate(vacancy.title_ru)
-            vacancy.title_de = GoogleTranslator(source='auto', target='de').translate(vacancy.title_ru)
+    
+    # 1. ЗАЩИТА: Блокируем доступ к странице редактирования чужим пользователям
+    if 'user_id' not in session or session.get('role') != 'organization':
+        flash("У вас нет прав для редактирования вакансий.", "danger")
+        return redirect('/')
+        
+    if vacancy.author_id != session.get('user_id'):
+        flash("Вы не можете редактировать чужую вакансию.", "danger")
+        return redirect(f'/vacancy/{id}')
 
-            db.session.commit()
-            return redirect('/')
-    return render_template('edit_vacancy.html', vacancy=vacancy)
+    # 2. ОБРАБОТКА ДАННЫХ ПРИ СОХРАНЕНИИ
+    if request.method == 'POST':
+        title_ru = request.form.get('title')
+        description_ru = request.form.get('description')
+        dept_input = request.form.get('department_id')
+        
+        # Обновляем Кафедру/Направление
+        if dept_input:
+            if str(dept_input).isdigit():
+                vacancy.department_id = int(dept_input)
+            else:
+                existing_dept = Department.query.filter_by(name_ru=dept_input).first()
+                if existing_dept:
+                    vacancy.department_id = existing_dept.id
+                else:
+                    try:
+                        dept_en = GoogleTranslator(source='auto', target='en').translate(dept_input)
+                        dept_de = GoogleTranslator(source='auto', target='de').translate(dept_input)
+                    except:
+                        dept_en, dept_de = dept_input, dept_input
+
+                    new_dept = Department(name_ru=dept_input, name_en=dept_en, name_de=dept_de)
+                    db.session.add(new_dept)
+                    db.session.commit()
+                    vacancy.department_id = new_dept.id
+
+        # Обновляем Название и переводим
+        if title_ru:
+            vacancy.title_ru = title_ru
+            try:
+                vacancy.title_en = GoogleTranslator(source='auto', target='en').translate(title_ru)
+                vacancy.title_de = GoogleTranslator(source='auto', target='de').translate(title_ru)
+            except:
+                pass
+
+        # Обновляем Описание и переводим
+        if description_ru:
+            vacancy.description_ru = description_ru
+            try:
+                vacancy.description_en = GoogleTranslator(source='auto', target='en').translate(description_ru)
+                vacancy.description_de = GoogleTranslator(source='auto', target='de').translate(description_ru)
+            except:
+                pass
+
+        db.session.commit()
+        flash("Вакансия успешно обновлена.", "success")
+        return redirect(f'/vacancy/{vacancy.id}') # После успеха отправляем обратно на карточку вакансии
+        
+    # Загружаем список всех кафедр, чтобы форма работала корректно
+    departments = Department.query.all()
+    return render_template('edit_vacancy.html', vacancy=vacancy, departments=departments)
 
 @vacancy_bp.route('/set_lang/<lang>')
 def set_lang(lang):
@@ -188,21 +247,3 @@ def set_lang(lang):
 def vacancy_detail(id):
     vacancy = Vacancy.query.get_or_404(id)
     return render_template('vacancy_detail.html', vacancy=vacancy)
-
-@vacancy_bp.route('/change_status/<int:app_id>', methods=['POST'])
-def change_status(app_id):
-    if session.get('role') != 'organization':
-        return redirect('/')
-
-    application = Application.query.get_or_404(app_id)
-    if application.vacancy.author_id != session.get('user_id'):
-        flash("У вас нет прав!", "danger")
-        return redirect('/dashboard')
-
-    new_status_id = request.form.get('status_id')
-    if new_status_id:
-        application.status_id = int(new_status_id)
-        db.session.commit()
-        flash("Статус кандидата обновлен.", "success")
-
-    return redirect('/dashboard')

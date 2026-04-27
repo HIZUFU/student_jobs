@@ -1,42 +1,55 @@
-{% extends "base.html" %}
-
-{% block title %}{{ t('home_page_title') }}{% endblock %}
-
-{% block content %}
-  <h2 class="mb-4">{{ t('vacancies_list') }}</h2>
-  <form class="d-flex mb-4" method="GET" action="/">
-    <input class="form-control me-2" type="search" name="q" value="{{ search_query }}" placeholder="Поиск по названию или компании..." aria-label="Search">
-    <button class="btn btn-outline-primary" type="submit">Найти</button>
-  </form>
-  <div class="row">
-    {% for vacancy in vacancies %}
-      <div class="col-md-6 mb-4">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body flex-column">
-            
-            <h5 class="card-title">
-              <a href="/vacancy/{{ vacancy.id }}" class="text-decoration-none text-primary">
-                {{ get_db_lang(vacancy, 'title') }}
-              </a>
-            </h5>
-            
-            <h6 class="card-subtitle mb-2 text-muted">
-              {{ vacancy.company }} 
-            </h6>
-            
-            <p class="card-text mt-3">
-              <span class="badge bg-secondary">
-                {{ get_db_lang(vacancy.department, 'name') }}
-              </span>
-            </p>
-            {% if session.get('role') == 'organization' and session.get('user_id') == vacancy.author_id %}
-    <a href="/update/{{ vacancy.id }}" class="btn btn-sm btn-outline-secondary mt-3">Редактировать</a>
-{% endif %}
-          </div>
+{% extends "base.html" %} {% block title %}{{ t('home_page_title') }}{% endblock
+%} {% block content %}
+<h2 class="mb-4">{{ t('vacancies_list') }}</h2>
+<form class="d-flex mb-4" method="GET" action="/">
+  <input
+    class="form-control me-2"
+    type="search"
+    name="q"
+    value="{{ search_query }}"
+    placeholder="Поиск по названию или компании..."
+    aria-label="Search"
+  />
+  <button class="btn btn-outline-primary" type="submit">Найти</button>
+</form>
+<div class="row">
+  {% for vacancy in vacancies %}
+  <div class="col-md-6 mb-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body flex-column">
+        <h5 class="card-title">
+          <a
+            href="/vacancy/{{ vacancy.id }}"
+            class="text-decoration-none text-primary"
+          >
+            {{ get_db_lang(vacancy, 'title') }}
+          </a>
+        </h5>
+        <h6 class="card-subtitle mb-2 text-muted">
+          <strong>Зарплата:</strong>
+          {% if vacancy.salary_from and vacancy.salary_to %} {{
+          vacancy.salary_from }} - {{ vacancy.salary_to }} руб. {% elif
+          vacancy.salary_from %} от {{ vacancy.salary_from }} руб. {% elif
+          vacancy.salary_to %} до {{ vacancy.salary_to }} руб. {% else %} По
+          договоренности {% endif %}
+        </h6>
+            {% if session.get('role') == 'student' %}
+                <a href="/apply/{{ vacancy.id }}" class="btn btn-primary btn-lg">
+                    Откликнуться
+                </a>
+            {% endif %}
+        {% if session.get('role') == 'organization' and session.get('user_id') == vacancy.author_id %}
+        <div> 
+          <a href="/update/{{ vacancy.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+          <a href="/delete/{{ vacancy.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Вы уверены, что хотите удалить эту вакансию?');">Удалить</a>
+        
         </div>
+        {% endif %}
       </div>
-    {% else %}
-      <p class="text-muted">{{ t('no_vacancies') }}</p>
-    {% endfor %}
+    </div>
   </div>
+  {% else %}
+  <p class="text-muted">{{ t('no_vacancies') }}</p>
+  {% endfor %}
+</div>
 {% endblock %}

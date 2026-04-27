@@ -30,6 +30,30 @@
           Написано символов: <span id="char-count" class="fw-bold">0</span> из 100 необходимых.
         </div>
       </div>
+      <div class="row mb-3">
+    <div class="col-md-4">
+        <label for="salary_from" class="form-label fw-bold">Зарплата от (руб.)</label>
+        <input type="number" class="form-control" id="salary_from" name="salary_from" placeholder="Например: 50000">
+    </div>
+    <div class="col-md-4">
+        <label for="salary_to" class="form-label fw-bold">Зарплата до (руб.)</label>
+        <input type="number" class="form-control" id="salary_to" name="salary_to" placeholder="Например: 100000">
+    </div>
+    <div class="col-md-4">
+        <label for="employment_type" class="form-label fw-bold">Тип занятости</label>
+        <select class="form-select" id="employment_type" name="employment_type">
+            <option value="Полный день">Полный день</option>
+            <option value="Гибкий график">Гибкий график</option>
+            <option value="Удаленная работа">Удаленная работа</option>
+            <option value="Частичная занятость">Частичная занятость</option>
+        </select>
+    </div>
+</div>
+
+<div class="form-check form-switch mb-4">
+    <input class="form-check-input" type="checkbox" id="is_internship" name="is_internship" value="yes">
+    <label class="form-check-label" for="is_internship">Это стажировка / программа обучения</label>
+</div>
       
       <button type="submit" id="submit-btn" class="btn btn-primary" disabled>{{ t('publish') }}</button>
     </form>
